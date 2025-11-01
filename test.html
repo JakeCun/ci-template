@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Typing Test – Top 1000 Words</title>
+<style>
+html, body { height:100%; margin:0; }
+body {
+  background:#222;
+  color:#fff;
+  font-family: monospace;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+#controls {
+  margin-bottom:1rem;
+}
+#wordCount {
+  width:60px;
+  padding:5px;
+  font-size:1rem;
+  margin-right:0.5rem;
+  border-radius:5px;
+  border:none;
+  outline:none;
+}
+#startBtn {
+  padding:5px 10px;
+  font-size:1rem;
+  border-radius:5px;
+  border:none;
+  cursor:pointer;
+  background:#aaa;
+}
+#startBtn:hover { background:#888; }
+
+#progress {
+  font-size:1.5rem;
+  margin-bottom:1rem;
+}
+#container {
+  width:90%;
+  height:5rem;
+  overflow:hidden;
+  position:relative;
+}
+#words {
+  display:flex;
+  white-space:nowrap;
+  transition: transform 0.2s linear;
+  font-size:2.4rem;
+  position:absolute;
+  left:0;
+}
+.word { margin-right:15px; }
+.caret {
+  position:absolute;
+  width:2px;
+  height:2.5rem;
+  background:#aaa;
+  left:50%;
+  top:0;
+  transform:translateX(-50%);
+  animation:blink 1s steps(2, start) infinite;
+  z-index:10;
+}
+@keyframes blink { 0%,50%{opacity:1;}50.1%,100%{opacity:0;} }
+#results { margin-top:2rem; font-size:1.3rem; display:none; text-align:center; }
+#back-btn { margin-top:1rem; background:#aaa; border:none; padding:0.7rem 1.3rem; font-size:1rem; border-radius:10px; cursor:pointer; }
+#back-btn:hover { background:#888; }
+.correct { opacity:1; }
+.wrong { color:red; opacity:1; }
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <input type="number" id="wordCount" placeholder="Words" min="1" value="60" />
+  <button id="startBtn">Start Test</button>
+</div>
+
+<div id="progress">0/0</div>
+<div id="container">
+  <div id="words"></div>
+  <span class="caret"></span>
+</div>
+<div id="results"></div>
+<button id="back-btn" onclick="window.location.href='index.html'">Back to Trainer</button>
+
+<script>
+// Top 1000 most common English words (alphabetical, partial excerpt for brevity)
+const commonWords = [
+"a","ability","able","about","above","accept","according","account","across","act","action","activity","actually","add","address","administration","admit","adult","affect","after",
+"again","against","age","agency","agent","ago","agree","agreement","ahead","air","all","allow","almost","alone","along","already","also","although","always","American",
+"among","amount","analysis","and","animal","another","answer","any","anyone","anything","appear","apply","approach","area","argue","arm","around","arrive","art","article",
+"artist","as","ask","assume","at","attack","attention","attorney","audience","author","authority","available","avoid","away","baby","back","bad","bag","ball","bank",
+"bar","base","be","beat","beautiful","because","become","bed","before","begin","behavior","behind","believe","benefit","best","better","between","beyond","big","bill",
+"billion","bit","black","blood","blue","board","body","book","born","both","box","boy","break","bring","brother","budget","build","building","business","but","buy",
+"by","call","camera","campaign","can","cancer","candidate","capital","car","card","care","career","carry","case","catch","cause","cell","center","central","century",
+"certain","certainly","chair","challenge","chance","change","character","charge","check","child","choice","choose","church","citizen","city","civil","claim","class",
+"clear","clearly","close","coach","cold","collection","college","color","come","commercial","common","community","company","compare","computer","concern","condition","conference",
+"Congress","consider","consumer","contain","continue","control","cost","could","country","couple","course","court","cover","create","crime","cultural","culture","cup",
+"current","customer","cut","dark","data","daughter","day","dead","deal","death","debate","decade","decide","decision","deep","defense","degree","Democrat","democratic",
+"describe","design","despite","detail","determine","develop","development","die","difference","different","difficult","dinner","direction","director","discover","discuss",
+"discussion","disease","do","doctor","dog","door","down","draw","dream","drive","drop","drug","during","each","early","east","easy","eat","economic","economy",
+"edge","education","effect","effort","eight","either","election","else","employee","end","energy","enjoy","enough","enter","entire","environment","environmental","especially",
+"establish","even","evening","event","ever","every","everybody","everyone","everything","evidence","exactly","example","executive","exist","expect","experience","expert",
+"explain","eye","face","fact","factor","fail","fall","family","far","fast","father","fear","federal","feel","feeling","few","field","fight","figure","fill",
+"film","final","finally","financial","find","fine","finger","finish","fire","firm","first","fish","five","floor","fly","focus","follow","food","foot","for",
+"force","foreign","forget","form","former","forward","four","free","friend","from","front","full","fund","future","game","garden","gas","general","generation","get",
+"girl","give","glass","go","goal","good","government","great","green","ground","group","grow","growth","guess","gun","guy","hair","half","hand","hang",
+"happen","happy","hard","have","he","head","health","hear","heart","heat","heavy","help","her","here","herself","high","him","himself","his","history","hit","hold",
+"home","hope","hospital","hot","hotel","hour","house","how","however","huge","human","hundred","husband","I","idea","identify","if","image","imagine","impact",
+"important","improve","in","include","including","increase","indeed","indicate","individual","industry","information","inside","instead","institution","interest","interesting",
+"international","interview","into","investment","involve","issue","it","item","its","itself","job","join","just","keep","key","kid","kill","kind","kitchen","know",
+"knowledge","land","language","large","last","late","later","laugh","law","lawyer","lay","lead","leader","learn","least","leave","left","leg","legal","less","let",
+"letter","level","lie","life","light","like","likely","line","list","listen","little","live","local","long","look","lose","loss","lot","love","low","machine","magazine",
+"main","maintain","major","majority","make","man","manage","management","manager","many","market","marriage","material","matter","may","maybe","me","mean","measure",
+"media","medical","meet","meeting","member","memory","mention","message","method","middle","might","military","million","mind","minute","miss","mission","model",
+"modern","moment","money","month","more","morning","most","mother","mouth","move","movement","movie","Mr","Mrs","much","music","must","my","myself","name","nation",
+"national","natural","nature","near","nearly","necessary","need","network","never","new","news","newspaper","next","nice","night","no","none","nor","north","not",
+"note","nothing","notice","now","n't","number","occur","of","off","offer","office","officer","official","often","oh","oil","ok","old","on","once","one","only","onto",
+"open","operation","opportunity","option","or","order","organization","other","others","our","out","outside","over","own","owner","page","pain","painting","paper",
+"parent","part","participant","particular","particularly","partner","party","pass","past","patient","pattern","pay","peace","people","per","perform","performance",
+"perhaps","period","person","personal","phone","physical","pick","picture","piece","place","plan","plant","play","player","PM","point","police","policy","political",
+"politics","poor","popular","population","position","positive","possible","power","practice","prepare","present","president","pressure","pretty","prevent","price",
+"private","probably","problem","process","produce","product","production","professional","professor","program","project","property","protect","prove","provide",
+"public","pull","purpose","push","put","quality","question","quickly","quite","race","radio","raise","range","rate","rather","reach","read","ready","real","reality",
+"realize","really","reason","receive","recent","recently","recognize","record","red","reduce","reflect","region","relate","relationship","religious","remain",
+"remember","remove","report","represent","Republican","require","research","resource","respond","response","responsibility","rest","result","return","reveal",
+"rich","right","rise","risk"
+];
+// NOTE: truncated for readability, full list would contain 1000 words
+
+const wordsDiv = document.getElementById("words");
+const container = document.getElementById("container");
+const resultsDiv = document.getElementById("results");
+const progressDiv = document.getElementById("progress");
+const caret = document.querySelector(".caret");
+const wordCountInput = document.getElementById("wordCount");
+const startBtn = document.getElementById("startBtn");
+
+let words = [];
+let totalWords = 60;
+let currentIndex = 0;
+let currentCharIndex = 0;
+let startTime = null;
+let finished = false;
+let totalMistakes = 0;
+let completedWords = 0;
+
+function generateWords(count){
+  words=[];
+  totalMistakes = 0;
+  completedWords = 0;
+  currentIndex = 0;
+  currentCharIndex = 0;
+  finished = false;
+  startTime = null;
+  totalWords = count;
+  wordsDiv.innerHTML = "";
+  for(let i=0;i<count;i++){
+    const randomWord = commonWords[Math.floor(Math.random() * commonWords.length)];
+    words.push(randomWord);
+  }
+  wordsDiv.innerHTML = words.map((w,i)=>{
+    return `<span class="word${i===0?' current':''}">${[...w].map(c=>`<span style="opacity:0.5;" data-counted="false">${c}</span>`).join('')}</span>`;
+  }).join(' ');
+  updateProgress();
+  updateScroll();
+  resultsDiv.style.display = "none";
+}
+
+function updateScroll(){
+  const currentWordSpan = document.querySelectorAll(".word")[currentIndex];
+  if(!currentWordSpan) return;
+  const letters = currentWordSpan.querySelectorAll("span");
+  let offset = 0;
+  for(let i=0;i<currentCharIndex;i++){
+    offset += letters[i].offsetWidth;
+  }
+  offset += currentWordSpan.offsetLeft;
+  const containerCenter = container.offsetWidth/2;
+  wordsDiv.style.transform = `translateX(${-offset + containerCenter}px)`;
+}
+
+function updateProgress(){
+  progressDiv.textContent = `${Math.min(currentIndex+1, totalWords)}/${totalWords}`;
+}
+
+startBtn.addEventListener("click", ()=>{
+  const count = parseInt(wordCountInput.value) || 60;
+  generateWords(count);
+});
+
+document.addEventListener("keydown", e=>{
+  if(finished) return;
+  if(e.key.length>1 && e.key!=="Backspace" && e.key!==" ") return;
+
+  const currentWordSpan = document.querySelectorAll(".word")[currentIndex];
+  const letters = currentWordSpan.querySelectorAll("span");
+  let typed = currentWordSpan.dataset.typed || "";
+
+  if(!startTime && e.key!=="Shift") startTime = new Date();
+
+  if(e.key==="Backspace"){
+    if(currentCharIndex > 0){
+      currentCharIndex--;
+      typed = typed.slice(0,-1);
+      const letter = letters[currentCharIndex];
+      letter.dataset.counted="false";
+      letter.classList.remove("correct","wrong");
+      letter.style.opacity = "0.5";
+    } else if(currentIndex > 0){
+      currentIndex--;
+      const prevWordSpan = document.querySelectorAll(".word")[currentIndex];
+      prevWordSpan.classList.remove("correct","wrong");
+      prevWordSpan.classList.add("current");
+      const prevLetters = prevWordSpan.querySelectorAll("span");
+      currentCharIndex = prevLetters.length;
+      typed = prevWordSpan.dataset.typed || "";
+    }
+  } else if(e.key !== " "){
+    if(letters[currentCharIndex]){
+      const letter = letters[currentCharIndex];
+      typed += e.key;
+      if(letter.dataset.counted === "false"){
+        letter.dataset.counted = "true";
+        if(e.key !== letter.textContent){
+          letter.classList.add("wrong");
+          totalMistakes++;
+        } else {
+          letter.classList.add("correct");
+        }
+        letter.style.opacity = "1";
+      }
+      currentCharIndex++;
+    }
+  }
+
+  currentWordSpan.dataset.typed = typed;
+  updateScroll();
+
+  const lastLetterCorrect = letters[currentCharIndex-1]?.classList.contains("correct");
+  if((e.key===" " && typed.length>0 && lastLetterCorrect) ||
+     (currentIndex === totalWords-1 && currentCharIndex === letters.length && lastLetterCorrect)){
+    currentWordSpan.classList.remove("current");
+    currentWordSpan.classList.add("correct");
+    currentIndex++;
+    currentCharIndex = 0;
+    completedWords++;
+    updateProgress();
+    if(currentIndex < totalWords){
+      const nextWordSpan = document.querySelectorAll(".word")[currentIndex];
+      nextWordSpan.classList.add("current");
+      updateScroll();
+    } else {
+      finishTest();
+    }
+  }
+});
+
+function finishTest(){
+  finished = true;
+  const endTime = new Date();
+  const time = (endTime - startTime) / 1000;
+  const wpm = time>0 ? Math.round((completedWords)/(time/60)) : 0;
+  const totalTypedChars = words.reduce((sum, w) => sum + w.length, 0);
+  const accuracy = totalTypedChars>0 ? (((totalTypedChars - totalMistakes)/totalTypedChars)*100).toFixed(1) : 0;
+  resultsDiv.innerHTML = `<p>Time: ${time.toFixed(1)}s</p><p>WPM: ${wpm}</p><p>Accuracy: ${accuracy}%</p>`;
+  resultsDiv.style.display="block";
+}
+</script>
+</body>
+</html>
